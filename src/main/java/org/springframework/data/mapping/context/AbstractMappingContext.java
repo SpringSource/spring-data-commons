@@ -43,6 +43,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.KotlinDetector;
 import org.springframework.core.NativeDetector;
+import org.springframework.core.env.PropertyResolver;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
@@ -88,6 +89,7 @@ import org.springframework.util.ReflectionUtils.FieldFilter;
  * @author Mark Paluch
  * @author Mikael Klamra
  * @author Christoph Strobl
+ * @author Tim Sazon
  */
 public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?, P>, P extends PersistentProperty<P>>
 		implements MappingContext<E, P>, ApplicationEventPublisherAware, ApplicationContextAware, InitializingBean {
@@ -100,6 +102,7 @@ public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?
 	private final PersistentPropertyPathFactory<E, P> persistentPropertyPathFactory;
 
 	private @Nullable ApplicationEventPublisher applicationEventPublisher;
+	private @Nullable PropertyResolver propertyResolver;
 	private EvaluationContextProvider evaluationContextProvider = EvaluationContextProvider.DEFAULT;
 
 	private Set<? extends Class<?>> initialEntitySet = new HashSet<>();
@@ -143,6 +146,10 @@ public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?
 
 		if (applicationEventPublisher == null) {
 			this.applicationEventPublisher = applicationContext;
+		}
+
+		if (propertyResolver == null) {
+			this.propertyResolver = applicationContext.getEnvironment();
 		}
 	}
 
@@ -375,6 +382,7 @@ public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?
 			entity = createPersistentEntity(typeInformation);
 
 			entity.setEvaluationContextProvider(evaluationContextProvider);
+			entity.setPropertyResolver(propertyResolver);
 
 			// Eagerly cache the entity as we might have to find it during recursive lookups.
 			persistentEntities.put(typeInformation, Optional.of(entity));
