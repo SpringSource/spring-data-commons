@@ -164,6 +164,15 @@ public abstract class AbstractPersistentProperty<P extends PersistentProperty<P>
 	 */
 	@Override
 	public Iterable<? extends TypeInformation<?>> getPersistentEntityTypes() {
+		return getPersistentEntityTypeInformation();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.PersistentProperty#getPersistentEntityTypeInformation()
+	 */
+	@Override
+	public Iterable<? extends TypeInformation<?>> getPersistentEntityTypeInformation() {
 
 		if (isMap() || isCollectionLike()) {
 			return entityTypeInformation.get();
@@ -279,9 +288,19 @@ public abstract class AbstractPersistentProperty<P extends PersistentProperty<P>
 	@Override
 	public Class<?> getAssociationTargetType() {
 
-		TypeInformation<?> result = associationTargetType.getNullable();
+		TypeInformation<?> result = getAssociationTargetTypeInformation();
 
 		return result != null ? result.getType() : null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.PersistentProperty#getAssociationTargetTypeInformation()
+	 */
+	@Nullable
+	@Override
+	public TypeInformation<?> getAssociationTargetTypeInformation() {
+		return associationTargetType.getNullable();
 	}
 
 	/*
@@ -356,11 +375,7 @@ public abstract class AbstractPersistentProperty<P extends PersistentProperty<P>
 	 */
 	@Override
 	public Class<?> getActualType() {
-
-		TypeInformation<?> targetType = associationTargetType.getNullable();
-		TypeInformation<?> result = targetType == null ? information.getRequiredActualType() : targetType;
-
-		return result.getType();
+		return getActualTypeInformation().getType();
 	}
 
 	/*
@@ -373,6 +388,12 @@ public abstract class AbstractPersistentProperty<P extends PersistentProperty<P>
 
 	protected Property getProperty() {
 		return this.property;
+	}
+
+	protected TypeInformation<?> getActualTypeInformation() {
+
+		TypeInformation<?> targetType = associationTargetType.getNullable();
+		return targetType == null ? information.getRequiredActualType() : targetType;
 	}
 
 	/*
@@ -415,9 +436,8 @@ public abstract class AbstractPersistentProperty<P extends PersistentProperty<P>
 
 	private Set<TypeInformation<?>> detectEntityTypes(SimpleTypeHolder simpleTypes) {
 
-		TypeInformation<?> typeToStartWith = ASSOCIATION_TYPE != null && ASSOCIATION_TYPE.isAssignableFrom(rawType)
-				? information.getComponentType()
-				: information;
+		TypeInformation<?> typeToStartWith = getAssociationTargetTypeInformation();
+		typeToStartWith = typeToStartWith == null ? information : typeToStartWith;
 
 		Set<TypeInformation<?>> result = detectEntityTypes(typeToStartWith);
 
